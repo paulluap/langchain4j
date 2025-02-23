@@ -63,6 +63,11 @@ public interface StreamingChatLanguageModel {
             }
 
             @Override
+            public void onPartialReasoning(String reasoningResponse) {
+                handler.onPartialReasoning(reasoningResponse);
+            }
+
+            @Override
             public void onCompleteResponse(ChatResponse completeResponse) {
                 ListenersUtil.onResponse(completeResponse, finalChatRequest, attributes, listeners);
                 handler.onCompleteResponse(completeResponse);
@@ -116,6 +121,11 @@ public interface StreamingChatLanguageModel {
             @Override
             public void onNext(String token) {
                 handler.onPartialResponse(token);
+            }
+
+            @Override
+            public void onNextReasoning(String token) {
+                handler.onPartialReasoning(token);
             }
 
             @Override

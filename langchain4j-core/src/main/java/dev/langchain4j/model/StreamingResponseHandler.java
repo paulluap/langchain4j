@@ -19,6 +19,13 @@ public interface StreamingResponseHandler<T> {
      */
     void onNext(String token);
 
+
+    /**
+     * Invoked each time the language model generates new reasoning content.
+     * @param token The newly generated reasoning content.
+     */
+    default void onNextReasoning(String token) {}
+
     /**
      * Invoked when the language model has finished streaming a response.
      * If the model executes one or multiple tools, it is accessible via {@link dev.langchain4j.data.message.AiMessage#toolExecutionRequests()}.

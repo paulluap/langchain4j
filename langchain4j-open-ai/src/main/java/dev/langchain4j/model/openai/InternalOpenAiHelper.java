@@ -444,6 +444,7 @@ public class InternalOpenAiHelper {
     public static AiMessage aiMessageFrom(ChatCompletionResponse response) {
         AssistantMessage assistantMessage = response.choices().get(0).message();
         String text = assistantMessage.content();
+        String reasoningContent = assistantMessage.reasoningContent();
 
         List<ToolCall> toolCalls = assistantMessage.toolCalls();
         if (!isNullOrEmpty(toolCalls)) {
@@ -452,8 +453,8 @@ public class InternalOpenAiHelper {
                     .map(InternalOpenAiHelper::toToolExecutionRequest)
                     .collect(toList());
             return isNullOrBlank(text)
-                    ? AiMessage.from(toolExecutionRequests)
-                    : AiMessage.from(text, toolExecutionRequests);
+                    ? AiMessage.from(toolExecutionRequests).withPossibleReasoning(reasoningContent)
+                    : AiMessage.from(text, toolExecutionRequests).withPossibleReasoning(reasoningContent);
         }
 
         FunctionCall functionCall = assistantMessage.functionCall();
@@ -463,11 +464,11 @@ public class InternalOpenAiHelper {
                     .arguments(functionCall.arguments())
                     .build();
             return isNullOrBlank(text)
-                    ? AiMessage.from(toolExecutionRequest)
-                    : AiMessage.from(text, singletonList(toolExecutionRequest));
+                    ? AiMessage.from(toolExecutionRequest).withPossibleReasoning(reasoningContent)
+                    : AiMessage.from(text, singletonList(toolExecutionRequest)).withPossibleReasoning(reasoningContent);
         }
 
-        return AiMessage.from(text);
+        return AiMessage.from(text).withPossibleReasoning(reasoningContent);
     }
 
     private static ToolExecutionRequest toToolExecutionRequest(ToolCall toolCall) {
@@ -577,6 +578,11 @@ public class InternalOpenAiHelper {
             @Override
             public void onPartialResponse(String partialResponse) {
                 handler.onNext(partialResponse);
+            }
+
+            @Override
+            public void onPartialReasoning(String reasoningResponse) {
+                handler.onNextReasoning(reasoningResponse);
             }
 
             @Override
