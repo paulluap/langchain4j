@@ -32,6 +32,7 @@ public class AiServiceTokenStream implements TokenStream {
     private final Object memoryId;
 
     private Consumer<String> partialResponseHandler;
+    private Consumer<String> partialReasoningHandler;
 
     private Consumer<List<Content>> contentsHandler;
     private Consumer<ToolExecution> toolExecutionHandler;
@@ -42,6 +43,7 @@ public class AiServiceTokenStream implements TokenStream {
     private Consumer<Throwable> errorHandler;
 
     private int onPartialResponseInvoked;
+    private int onPartialReasoningInvoked;
     private int onNextInvoked;
     private int onCompleteResponseInvoked;
     private int onCompleteInvoked;
@@ -69,6 +71,13 @@ public class AiServiceTokenStream implements TokenStream {
     public TokenStream onPartialResponse(Consumer<String> partialResponseHandler) {
         this.partialResponseHandler = partialResponseHandler;
         this.onPartialResponseInvoked++;
+        return this;
+    }
+
+    @Override
+    public TokenStream onPartialReasoning(Consumer<String> partialReasoningHandler) {
+        this.partialReasoningHandler = partialReasoningHandler;
+        this.onPartialReasoningInvoked++;
         return this;
     }
 
@@ -134,6 +143,7 @@ public class AiServiceTokenStream implements TokenStream {
                 context,
                 memoryId,
                 partialResponseHandler,
+                partialReasoningHandler,
                 toolExecutionHandler,
                 completeResponseHandler,
                 completionHandler,

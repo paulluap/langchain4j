@@ -36,6 +36,7 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
     private final Object memoryId;
 
     private final Consumer<String> partialResponseHandler;
+    private final Consumer<String> partialReasoningHandler;
     private final Consumer<ToolExecution> toolExecutionHandler;
     private final Consumer<ChatResponse> completeResponseHandler;
     private final Consumer<Response<AiMessage>> completionHandler;
@@ -47,32 +48,67 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
 
     private final List<ToolSpecification> toolSpecifications;
     private final Map<String, ToolExecutor> toolExecutors;
+    
+    
+        AiServiceStreamingResponseHandler(AiServiceContext context,
+                                          Object memoryId,
+                                          Consumer<String> partialResponseHandler,
+                                          Consumer<ToolExecution> toolExecutionHandler,
+                                          Consumer<ChatResponse> completeResponseHandler,
+                                          Consumer<Response<AiMessage>> completionHandler,
+                                          Consumer<Throwable> errorHandler,
+                                          List<ChatMessage> temporaryMemory,
+                                          TokenUsage tokenUsage,
+                                          List<ToolSpecification> toolSpecifications,
+                                          Map<String, ToolExecutor> toolExecutors) {
+            this(context, 
+                memoryId,
+                partialResponseHandler,
+                reasoning->{},
+                toolExecutionHandler,
+                completeResponseHandler,
+                completionHandler,
+                errorHandler,
+                temporaryMemory,
+                tokenUsage,
+                toolSpecifications,
+                toolExecutors);
+        }
+    
+        AiServiceStreamingResponseHandler(AiServiceContext context,
+                                          Object memoryId,
+                                          Consumer<String> partialResponseHandler,
+                                          Consumer<String> partialReasoningHandler,
+                                          Consumer<ToolExecution> toolExecutionHandler,
+                                          Consumer<ChatResponse> completeResponseHandler,
+                                          Consumer<Response<AiMessage>> completionHandler,
+                                          Consumer<Throwable> errorHandler,
+                                          List<ChatMessage> temporaryMemory,
+                                          TokenUsage tokenUsage,
+                                          List<ToolSpecification> toolSpecifications,
+                                          Map<String, ToolExecutor> toolExecutors) {
+            this.context = ensureNotNull(context, "context");
+            this.memoryId = ensureNotNull(memoryId, "memoryId");
+    
+            this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
+            this.partialReasoningHandler = partialReasoningHandler;
+            this.completeResponseHandler = completeResponseHandler;
+            this.completionHandler = completionHandler;
+            this.toolExecutionHandler = toolExecutionHandler;
+            this.errorHandler = errorHandler;
 
-    AiServiceStreamingResponseHandler(AiServiceContext context,
-                                      Object memoryId,
-                                      Consumer<String> partialResponseHandler,
-                                      Consumer<ToolExecution> toolExecutionHandler,
-                                      Consumer<ChatResponse> completeResponseHandler,
-                                      Consumer<Response<AiMessage>> completionHandler,
-                                      Consumer<Throwable> errorHandler,
-                                      List<ChatMessage> temporaryMemory,
-                                      TokenUsage tokenUsage,
-                                      List<ToolSpecification> toolSpecifications,
-                                      Map<String, ToolExecutor> toolExecutors) {
-        this.context = ensureNotNull(context, "context");
-        this.memoryId = ensureNotNull(memoryId, "memoryId");
+            this.temporaryMemory = new ArrayList<>(temporaryMemory);
+            this.tokenUsage = ensureNotNull(tokenUsage, "tokenUsage");
 
-        this.partialResponseHandler = ensureNotNull(partialResponseHandler, "partialResponseHandler");
-        this.completeResponseHandler = completeResponseHandler;
-        this.completionHandler = completionHandler;
-        this.toolExecutionHandler = toolExecutionHandler;
-        this.errorHandler = errorHandler;
+            this.toolSpecifications = copyIfNotNull(toolSpecifications);
+            this.toolExecutors = copyIfNotNull(toolExecutors);
+    }
 
-        this.temporaryMemory = new ArrayList<>(temporaryMemory);
-        this.tokenUsage = ensureNotNull(tokenUsage, "tokenUsage");
-
-        this.toolSpecifications = copyIfNotNull(toolSpecifications);
-        this.toolExecutors = copyIfNotNull(toolExecutors);
+    @Override
+    public void onPartialReasoning(String reasoningResponse) {
+        if (partialReasoningHandler != null) {
+            partialReasoningHandler.accept(reasoningResponse);
+        }
     }
 
     @Override
@@ -115,6 +151,7 @@ class AiServiceStreamingResponseHandler implements StreamingChatResponseHandler 
                     context,
                     memoryId,
                     partialResponseHandler,
+                    partialReasoningHandler,
                     toolExecutionHandler,
                     completeResponseHandler,
                     completionHandler,

@@ -27,6 +27,11 @@ public interface TokenStream {
      */
     TokenStream onPartialResponse(Consumer<String> partialResponseHandler);
 
+
+    default TokenStream onPartialReasoning(Consumer<String> partialReasoningHandler) {
+        return this;
+    }
+
     /**
      * The provided consumer will be invoked every time a new token from a language model is available.
      *
