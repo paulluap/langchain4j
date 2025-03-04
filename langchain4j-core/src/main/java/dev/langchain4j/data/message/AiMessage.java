@@ -2,6 +2,7 @@ package dev.langchain4j.data.message;
 
 import static dev.langchain4j.data.message.ChatMessageType.AI;
 import static dev.langchain4j.internal.Utils.isNullOrEmpty;
+import static dev.langchain4j.internal.Utils.isNullOrBlank;
 import static dev.langchain4j.internal.Utils.quoted;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotBlank;
 import static dev.langchain4j.internal.ValidationUtils.ensureNotEmpty;
@@ -249,7 +250,7 @@ public class AiMessage implements ChatMessage {
      * @return the new {@link AiMessage} with possible additional reasoning content.
      */
     public AiMessage withPossibleReasoning(String reasoningContent) {
-        if (reasoningContent == null) {
+        if (isNullOrBlank(reasoningContent)) {
             return this;
         }
 
